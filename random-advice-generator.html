@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Random Advice Generator</title>
   <style>
     /* Basic Reset */
@@ -17,15 +17,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
+      padding: 20px;
     }
     .container {
       background-color: #fff;
       border-radius: 8px;
       padding: 30px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      max-width: 500px;
-      width: 90%;
+      max-width: 600px;
+      width: 100%;
       text-align: center;
     }
     h1 {
@@ -37,10 +38,12 @@
       margin: 20px 0;
       color: #555;
       min-height: 60px;
+      line-height: 1.4;
     }
     button {
       padding: 12px 24px;
       font-size: 1rem;
+      margin: 5px;
       background-color: #007BFF;
       color: #fff;
       border: none;
@@ -51,39 +54,147 @@
     button:hover {
       background-color: #0056b3;
     }
+    hr {
+      margin: 30px 0;
+      border: none;
+      border-top: 1px solid #ddd;
+    }
+    #savedList {
+      text-align: left;
+      margin-top: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    #savedList li {
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+      font-size: 1rem;
+      color: #444;
+    }
+    .exportButtons {
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Random Advice Generator</h1>
-    <div id="adviceDisplay" class="advice">Click the button for advice</div>
+    <div id="adviceDisplay" class="advice">Click the button below to receive advice!</div>
     <button id="generateBtn">Get Advice</button>
+    <button id="saveBtn">Add to List</button>
+    
+    <hr />
+    <h2>Saved Advices</h2>
+    <ul id="savedList">
+      <!-- Saved advice items will appear here -->
+    </ul>
+    
+    <div class="exportButtons">
+      <button id="exportJSONBtn">Export as JSON</button>
+      <button id="exportCSVBtn">Export as CSV</button>
+      <button id="exportSQLBtn">Export as SQL</button>
+    </div>
   </div>
 
   <script>
     "use strict";
 
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
       const adviceDisplay = document.getElementById("adviceDisplay");
       const generateBtn = document.getElementById("generateBtn");
-
+      const saveBtn = document.getElementById("saveBtn");
+  
+      const exportJSONBtn = document.getElementById("exportJSONBtn");
+      const exportCSVBtn = document.getElementById("exportCSVBtn");
+      const exportSQLBtn = document.getElementById("exportSQLBtn");
+  
+      // Array to store saved advices
+      let savedAdvices = [];
+  
       // Function to fetch random advice from the API
       function fetchAdvice() {
         fetch("https://api.adviceslip.com/advice", { cache: "no-cache" })
           .then(response => response.json())
           .then(data => {
-            adviceDisplay.textContent = `"${data.slip.advice}"`;
+            adviceDisplay.textContent = data.slip.advice ? `"${data.slip.advice}"` : "No advice found.";
           })
           .catch(err => {
             adviceDisplay.textContent = "Unable to fetch advice. Please try again.";
             console.error("Error fetching advice:", err);
           });
       }
-
-      // Event listener for button click
+  
+      // Update the saved advice list UI
+      function updateSavedList() {
+        const savedList = document.getElementById("savedList");
+        savedList.innerHTML = "";
+        savedAdvices.forEach((advice, index) => {
+          const li = document.createElement("li");
+          li.textContent = advice;
+          savedList.appendChild(li);
+        });
+      }
+  
+      // Add current advice to the saved list
+      function saveCurrentAdvice() {
+        const currentAdvice = adviceDisplay.textContent;
+        // Only add if the advice is not empty and not the default prompt text
+        if (currentAdvice && currentAdvice !== "Click the button below to receive advice!" && currentAdvice !== "Unable to fetch advice. Please try again.") {
+          savedAdvices.push(currentAdvice);
+          updateSavedList();
+        }
+      }
+  
+      // Download helper function
+      function downloadExport(data, filename, type) {
+        const blob = new Blob([data], { type: type });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+  
+      // Export saved advices as JSON
+      function exportAsJSON() {
+        const data = JSON.stringify(savedAdvices, null, 2);
+        downloadExport(data, "advices.json", "application/json");
+      }
+  
+      // Export saved advices as CSV
+      function exportAsCSV() {
+        let csv = "Advice\n";
+        savedAdvices.forEach(advice => {
+          // Escape quotes by doubling them up
+          const safeAdvice = advice.replace(/"/g, '""');
+          csv += `"${safeAdvice}"\n`;
+        });
+        downloadExport(csv, "advices.csv", "text/csv");
+      }
+  
+      // Export saved advices as SQL insert statements
+      function exportAsSQL() {
+        let sql = "";
+        savedAdvices.forEach(advice => {
+          // Escape single quotes by replacing with two single quotes
+          const safeAdvice = advice.replace(/'/g, "''");
+          sql += `INSERT INTO advices (advice) VALUES ('${safeAdvice}');\n`;
+        });
+        downloadExport(sql, "advices.sql", "text/plain");
+      }
+  
+      // Event Listeners
       generateBtn.addEventListener("click", fetchAdvice);
-
-      // Optionally fetch advice on initial page load
+      saveBtn.addEventListener("click", saveCurrentAdvice);
+      exportJSONBtn.addEventListener("click", exportAsJSON);
+      exportCSVBtn.addEventListener("click", exportAsCSV);
+      exportSQLBtn.addEventListener("click", exportAsSQL);
+  
+      // Optionally, fetch advice on load
       fetchAdvice();
     });
   </script>
