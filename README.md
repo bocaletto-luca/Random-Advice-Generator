@@ -9,6 +9,8 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
 ![API](https://img.shields.io/badge/API-Advice%20Slip%20JSON-9cf?style=flat-square&logo=data)
 
+[![Test Online](https://img.shields.io/badge/Test%20Online-Click%20Here-brightgreen?style=for-the-badge)](https://bocaletto-luca.github.io/Random-Advice-Generator/)
+
 ## Overview
 
 **Random Advice Generator** is a single‑page web application that fetches random advice using the [Advice Slip JSON API](https://api.adviceslip.com/). In addition to fetching advice, the app allows users to save their favorite advice messages in a list and export this list in various formats (JSON, CSV, and SQL). Built with HTML5, CSS3, and vanilla JavaScript, this app is lightweight, responsive, and easy to use.
